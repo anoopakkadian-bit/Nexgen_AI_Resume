@@ -1,9 +1,8 @@
-import streamlit as st
-from database import add_user, get_user
-from auth import hash_password, verify_password
-from processor import extract_text_from_pdf, analyze_resume
+from backend.database import add_user, get_user
+from backend.auth import hash_password, verify_password
+from backend.processor import extract_text_from_pdf, analyze_resume
 
-st.set_page_config(page_title="NexGen AI", layout="wide")
+st.set_page_config(page_title="NexGen AI", layout="wide") 
 
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
