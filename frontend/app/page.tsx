@@ -16,7 +16,7 @@ export default function Home() {
     formData.append('file', uploadedFile);
 
     try {
-      const response = await fetch('http://localhost:8000/analyze', {
+      const response = await fetch('https://nexgen-ai-resume.onrender.com', {
         method: 'POST',
         body: formData,
       });
