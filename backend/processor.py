@@ -1,15 +1,14 @@
 import fitz  # PyMuPDF
 from groq import Groq
 import os
+import json # JSON കൈകാര്യം ചെയ്യാൻ ഇത് വേണം
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 
-# 1. പരിസ്ഥിതി സെറ്റിംഗ്സ് (Environment Settings)
 load_dotenv()
 app = FastAPI()
 
-# 2. CORS സെറ്റിംഗ്സ് (ഫ്രണ്ട് എൻഡുമായി കണക്ട് ചെയ്യാൻ)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,10 +17,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 3. AI ക്ലയന്റ് സെറ്റപ്പ്
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# 4. PDF-ൽ നിന്ന് ടെക്സ്റ്റ് എടുക്കാനുള്ള ഫങ്ക്ഷൻ
 def extract_text_from_pdf(pdf_stream):
     doc = fitz.open(stream=pdf_stream, filetype="pdf")
     text = ""
@@ -29,34 +26,41 @@ def extract_text_from_pdf(pdf_stream):
         text += page.get_text()
     return text
 
-# 5. AI വഴി റെസ്യൂമെ അനലൈസ് ചെയ്യാനുള്ള ഫങ്ക്ഷൻ
 def analyze_resume(resume_text):
+    # ഇവിടെയാണ് നമ്മൾ പ്രോംപ്റ്റ് മാറ്റുന്നത്
     prompt = f"""
-    You are an expert HR Manager. Analyze this resume and provide:
-    1. A professional summary.
-    2. Key skills missing for a software role.
-    3. Suggestions to improve.
+    You are an expert HR Manager and ATS Optimizer. Analyze the provided resume and return ONLY a valid JSON object.
+    
+    The JSON must follow this structure:
+    {{
+        "ats_score": (a number between 0-100),
+        "professional_summary": "A short summary",
+        "missing_skills": ["skill1", "skill2"],
+        "strengths": ["strength1", "strength2"],
+        "improvement_suggestions": ["tip1", "tip2"]
+    }}
+
     Resume Text: {resume_text}
     """
+    
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role": "user", "content": prompt}],
+        response_format={ "type": "json_object" } # ഇത് AI-യോട് JSON തന്നെ വേണമെന്ന് നിർബന്ധിക്കും
     )
-    return completion.choices[0].message.content
+    
+    # സ്ട്രിംഗിനെ പൈത്തൺ ഡിക്ഷണറിയിലേക്ക് മാറ്റുന്നു
+    return json.loads(completion.choices[0].message.content)
 
-# 6. മെയിൻ എൻഡ് പോയിന്റ് (ഇതാണ് ഫ്രണ്ട് എൻഡ് വിളിക്കുന്നത്)
 @app.post("/analyze")
 async def analyze(file: UploadFile = File(...)):
     try:
-        # ഫയൽ വായിക്കുന്നു
         pdf_content = await file.read()
-        
-        # ടെക്സ്റ്റ് വേർതിരിക്കുന്നു
         resume_text = extract_text_from_pdf(pdf_content)
         
-        # AI അനാലിസിസ് നടത്തുന്നു
+        # ഇപ്പോൾ ഇത് ഒരു ഡിക്ഷണറി ആയിരിക്കും തിരിച്ചു തരുന്നത്
         analysis_result = analyze_resume(resume_text)
         
-        return {"analysis": analysis_result}
+        return analysis_result # നേരിട്ട് ഡിക്ഷണറി അയക്കാം
     except Exception as e:
         return {"error": str(e)}
