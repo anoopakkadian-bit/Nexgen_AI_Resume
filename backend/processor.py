@@ -1,9 +1,9 @@
 import fitz  # PyMuPDF
 from groq import Groq
 import os
-import json # JSON കൈകാര്യം ചെയ്യാൻ ഇത് വേണം
+import json
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form # Form ഇവിടെ ആഡ് ചെയ്തു
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
@@ -26,18 +26,22 @@ def extract_text_from_pdf(pdf_stream):
         text += page.get_text()
     return text
 
-def analyze_resume(resume_text):
-    # ഇവിടെയാണ് നമ്മൾ പ്രോംപ്റ്റ് മാറ്റുന്നത്
-    prompt = f"""
-    You are an expert HR Manager and ATS Optimizer. Analyze the provided resume and return ONLY a valid JSON object.
+# ഇവിടെ jd_text കൂടി സ്വീകരിക്കാൻ പാകത്തിന് മാറ്റി
+def analyze_resume(resume_text, jd_text=None):
+    # JD ഉണ്ടെങ്കിൽ അത് പ്രോംപ്റ്റിൽ ഉൾപ്പെടുത്തും
+    context_instruction = f"Target Job Description: {jd_text}" if jd_text else "General software engineering role"
     
-    The JSON must follow this structure:
+    prompt = f"""
+    You are an expert HR Manager and ATS Optimizer. 
+    Analyze the resume based on this context: {context_instruction}.
+    
+    Return ONLY a valid JSON object with this structure:
     {{
-        "ats_score": (a number between 0-100),
-        "professional_summary": "A short summary",
-        "missing_skills": ["skill1", "skill2"],
-        "strengths": ["strength1", "strength2"],
-        "improvement_suggestions": ["tip1", "tip2"]
+        "ats_score": (number 0-100),
+        "professional_summary": "Short summary",
+        "missing_skills": ["List skills missing specifically for this role"],
+        "strengths": ["Key strengths found"],
+        "improvement_suggestions": ["Actionable tips"]
     }}
 
     Resume Text: {resume_text}
@@ -46,21 +50,20 @@ def analyze_resume(resume_text):
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
-        response_format={ "type": "json_object" } # ഇത് AI-യോട് JSON തന്നെ വേണമെന്ന് നിർബന്ധിക്കും
+        response_format={ "type": "json_object" }
     )
     
-    # സ്ട്രിംഗിനെ പൈത്തൺ ഡിക്ഷണറിയിലേക്ക് മാറ്റുന്നു
     return json.loads(completion.choices[0].message.content)
 
 @app.post("/analyze")
-async def analyze(file: UploadFile = File(...)):
+async def analyze(file: UploadFile = File(...), jd: str = Form(None)): # jd ഇങ്ങോട്ട് സ്വീകരിക്കുന്നു
     try:
         pdf_content = await file.read()
         resume_text = extract_text_from_pdf(pdf_content)
         
-        # ഇപ്പോൾ ഇത് ഒരു ഡിക്ഷണറി ആയിരിക്കും തിരിച്ചു തരുന്നത്
-        analysis_result = analyze_resume(resume_text)
+        # റെസ്യൂമെയും ജെഡിയും അനലൈസ് ചെയ്യാൻ അയക്കുന്നു
+        analysis_result = analyze_resume(resume_text, jd)
         
-        return analysis_result # നേരിട്ട് ഡിക്ഷണറി അയക്കാം
+        return analysis_result
     except Exception as e:
         return {"error": str(e)}
