@@ -1,132 +1,146 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-
-interface AnalysisResult {
-  ats_score: number;
-  professional_summary: string;
-  missing_skills: string[];
-  strengths: string[];
-  improvement_suggestions: string[];
-}
+import { useState } from "react";
+import axios from "axios";
 
 export default function Home() {
+  const [file, setFile] = useState<File | null>(null);
+  const [jobDescription, setJobDescription] = useState("");
+  const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [jd, setJd] = useState(""); // JD സ്റ്റോർ ചെയ്യാൻ പുതിയ സ്റ്റേറ്റ്
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFile = event.target.files?.[0];
-    if (!uploadedFile) return;
+  const handleUpload = async () => {
+    if (!file || !jobDescription) {
+      alert("Please upload a resume and provide a job description.");
+      return;
+    }
 
     setLoading(true);
-    setResult(null);
-    
     const formData = new FormData();
-    formData.append('file', uploadedFile);
-    formData.append('jd', jd); // യൂസർ ടൈപ്പ് ചെയ്ത JD ബാക്ക്-എൻഡിലേക്ക് അയക്കുന്നു
+    formData.append("file", file);
+    formData.append("job_description", jobDescription);
 
     try {
-      const response = await fetch('https://nexgen-ai-resume.onrender.com/analyze', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-      setResult(data);
+      const response = await axios.post("https://nexgen-ai-resume-backend.onrender.com/analyze", formData);
+      setResult(response.data);
     } catch (error) {
-      console.error("Error:", error);
-      alert("Error connecting to backend.");
+      console.error("Error connecting to backend:", error);
+      alert("Error connecting to backend. Please wait a minute and try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center p-6 pb-20">
-      {/* Background Glows */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-900/20 blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-900/20 blur-[120px]"></div>
-      </div>
+    <div className="min-h-screen bg-white text-gray-900 font-sans">
+      {/* 1. PROFESSIONAL NAVBAR */}
+      <nav className="flex items-center justify-between px-8 py-4 border-b border-gray-100 sticky top-0 bg-white z-50">
+        <div className="text-2xl font-bold text-blue-600 tracking-tighter">
+          NEXGEN <span className="text-gray-900">AI</span>
+        </div>
+        <div className="hidden md:flex space-x-8 font-medium text-gray-600">
+          <a href="#" className="hover:text-blue-600">Resume Checker</a>
+          <a href="#" className="hover:text-blue-600">Features</a>
+          <a href="#" className="hover:text-blue-600">FAQ</a>
+        </div>
+        <div className="flex items-center space-x-4">
+          <button className="text-gray-600 font-medium px-4 py-2">Log in</button>
+          <button className="bg-blue-600 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition">
+            Sign up free
+          </button>
+        </div>
+      </nav>
 
-      <div className="relative z-10 text-center space-y-4 mt-12 mb-10">
-        <h1 className="text-5xl md:text-7xl font-black tracking-tight">
-          NEXGEN <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">AI V2</span>
+      {/* 2. HERO SECTION & UPLOADER */}
+      <main className="max-w-4xl mx-auto pt-16 pb-24 px-6 text-center">
+        <h1 className="text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
+          Get more interviews with an <span className="text-blue-600">AI-powered</span> resume
         </h1>
-        <p className="text-slate-400 text-lg">Compare your resume with specific job roles instantly.</p>
-      </div>
+        <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
+          Upload your resume and the job description to see how well you match. 
+          Our AI gives you instant feedback to land your 20 LPA dream job.
+        </p>
 
-      <div className="relative z-10 w-full max-w-2xl space-y-6">
-        {/* Job Description Box */}
-        <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl">
-          <label className="block text-sm font-medium text-slate-400 mb-2">Paste Job Description (Optional)</label>
-          <textarea 
-            className="w-full h-32 bg-black/50 border border-slate-700 rounded-xl p-3 text-sm focus:border-blue-500 outline-none transition-all"
-            placeholder="Paste the job requirements here to get a tailored ATS score..."
-            value={jd}
-            onChange={(e) => setJd(e.target.value)}
+        <div className="bg-gray-50 p-8 rounded-3xl border-2 border-dashed border-gray-200 shadow-sm">
+          <textarea
+            className="w-full p-4 mb-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none h-40"
+            placeholder="Paste Job Description here..."
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
           />
+
+          <div className="flex flex-col items-center justify-center p-10 bg-white rounded-2xl border border-gray-200 shadow-sm mb-4">
+            <input
+              type="file"
+              className="mb-4 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+            <p className="text-gray-400 text-sm">Upload PDF or DOCX</p>
+          </div>
+
+          <button
+            onClick={handleUpload}
+            disabled={loading}
+            className={`w-full py-4 rounded-xl text-lg font-bold text-white transition ${
+              loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-lg"
+            }`}
+          >
+            {loading ? "AI is Analyzing..." : "Analyze My Resume"}
+          </button>
         </div>
 
-        {/* Upload Area */}
-        <label className={`block p-10 rounded-3xl border-2 border-dashed transition-all cursor-pointer
-          ${loading ? 'border-blue-500 bg-blue-500/5' : 'border-slate-800 hover:border-slate-600 bg-slate-900/30'}`}>
-          <input type="file" className="hidden" accept=".pdf" onChange={handleFileUpload} disabled={loading} />
-          <div className="text-center">
-            {loading ? (
-              <div className="space-y-4">
-                <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
-                <p className="text-blue-400 animate-pulse">Analyzing with AI...</p>
+        {/* 3. RESULTS SECTION */}
+        {result && (
+          <div className="mt-12 p-8 bg-white rounded-3xl border border-gray-200 shadow-xl text-left animate-fade-in">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Analysis Results</h2>
+              <div className="text-4xl font-black text-blue-600 bg-blue-50 px-6 py-2 rounded-2xl">
+                {result.match_score}%
               </div>
-            ) : (
-              <>
-                <div className="text-3xl mb-2">📤</div>
-                <h3 className="text-lg font-bold">Upload Resume</h3>
-                <p className="text-slate-500 text-sm">Click to select PDF</p>
-              </>
-            )}
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="font-bold text-green-600 mb-2 flex items-center">
+                   ✅ Strengths
+                </h3>
+                <ul className="space-y-2">
+                  {result.strengths?.map((s: string, i: number) => (
+                    <li key={i} className="bg-green-50 p-3 rounded-lg text-gray-700 text-sm">{s}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-bold text-red-600 mb-2 flex items-center">
+                   ⚠️ Missing Skills
+                </h3>
+                <ul className="space-y-2">
+                  {result.missing_skills?.map((m: string, i: number) => (
+                    <li key={i} className="bg-red-50 p-3 rounded-lg text-gray-700 text-sm">{m}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
-        </label>
-      </div>
+        )}
+      </main>
 
-      {/* Results Dashboard (ഇത് പഴയതുപോലെ തന്നെ തുടരും) */}
-      {result && (
-        <div className="relative z-10 mt-12 w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-           {/* പഴയ അതേ result UI കോഡ് ഇവിടെ വരും (ATS Score, Summary, etc.) */}
-           {/* (ഞാൻ നേരത്തെ തന്ന result സെക്ഷൻ ഇവിടെ പേസ്റ്റ് ചെയ്താൽ മതി) */}
-           <div className="md:col-span-1 bg-slate-900/80 border border-slate-800 p-8 rounded-3xl flex flex-col items-center justify-center">
-            <h3 className="text-slate-400 font-bold mb-6 uppercase tracking-wider text-sm">ATS Match Score</h3>
-            <div className="relative flex items-center justify-center">
-              <svg className="w-32 h-32">
-                <circle className="text-slate-800" strokeWidth="8" stroke="currentColor" fill="transparent" r="58" cx="64" cy="64"/>
-                <circle className="text-blue-500" strokeWidth="8" strokeDasharray={364} strokeDashoffset={364 - (364 * result.ats_score) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="58" cx="64" cy="64"/>
-              </svg>
-              <span className="absolute text-3xl font-black">{result.ats_score}%</span>
+      {/* 4. FAQ / MOTIVES SECTION */}
+      <footer className="bg-gray-900 text-white py-20 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-12">Frequently Asked Questions</h2>
+          <div className="grid md:grid-cols-2 gap-8 text-left">
+            <div className="bg-gray-800 p-6 rounded-2xl">
+              <h4 className="font-bold mb-2">How accurate is the AI?</h4>
+              <p className="text-gray-400 text-sm">We use advanced NLP models to compare your resume against industry standards and specific JD requirements.</p>
             </div>
-          </div>
-          <div className="md:col-span-2 space-y-6">
-            <div className="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl">
-              <h3 className="text-blue-400 font-bold mb-3 flex items-center gap-2">⭐ Summary</h3>
-              <p className="text-slate-300 text-sm leading-relaxed">{result.professional_summary}</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-3xl text-sm">
-                <h3 className="text-red-400 font-bold mb-3">⚠️ Missing Skills</h3>
-                <div className="flex flex-wrap gap-2">
-                  {result.missing_skills.map((s, i) => <span key={i} className="bg-red-500/10 px-2 py-1 rounded border border-red-500/20">{s}</span>)}
-                </div>
-              </div>
-              <div className="bg-green-500/5 border border-green-500/20 p-6 rounded-3xl text-sm">
-                <h3 className="text-green-400 font-bold mb-3">✅ Strengths</h3>
-                <div className="flex flex-wrap gap-2">
-                  {result.strengths.map((s, i) => <span key={i} className="bg-green-500/10 px-2 py-1 rounded border border-green-500/20">{s}</span>)}
-                </div>
-              </div>
+            <div className="bg-gray-800 p-6 rounded-2xl">
+              <h4 className="font-bold mb-2">Is my data safe?</h4>
+              <p className="text-gray-400 text-sm">We do not store your resumes. Your files are processed in real-time and deleted immediately after analysis.</p>
             </div>
           </div>
         </div>
-      )}
-    </main>
+      </footer>
+    </div>
   );
 }
