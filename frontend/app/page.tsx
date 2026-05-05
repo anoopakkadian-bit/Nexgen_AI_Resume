@@ -152,4 +152,4 @@ function StatCard({ title, value, icon, color }: { title: string, value: string,
       <div className="text-gray-500 text-sm">{title}</div>
     </div>
   );
-}
+}   
