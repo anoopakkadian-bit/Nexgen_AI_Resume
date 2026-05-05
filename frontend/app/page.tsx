@@ -1,146 +1,161 @@
 "use client";
-
-import { useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
+import { 
+  LayoutDashboard, FileText, Briefcase, Settings, 
+  Upload, Search, Bell, User, CheckCircle, AlertCircle 
+} from "lucide-react";
 
-export default function Home() {
+export default function Dashboard() {
   const [file, setFile] = useState<File | null>(null);
-  const [jobDescription, setJobDescription] = useState("");
-  const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [score, setScore] = useState<number | null>(null);
 
   const handleUpload = async () => {
-    if (!file || !jobDescription) {
-      alert("Please upload a resume and provide a job description.");
-      return;
-    }
-
+    if (!file) return alert("Please select a file first!");
     setLoading(true);
     const formData = new FormData();
-    formData.append("file", file);
-    formData.append("job_description", jobDescription);
+    formData.append("resume", file);
 
     try {
-      const response = await axios.post("https://nexgen-ai-resume-backend.onrender.com/analyze", formData);
-      setResult(response.data);
-    } catch (error) {
-      console.error("Error connecting to backend:", error);
-      alert("Error connecting to backend. Please wait a minute and try again.");
+      // Replace with your actual Render URL
+      const res = await axios.post("https://your-render-link.onrender.com/analyze", formData);
+      setScore(res.data.ats_score);
+    } catch (err) {
+      console.error(err);
+      alert("Backend connection error. Please wait for Render to wake up.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans">
-      {/* 1. PROFESSIONAL NAVBAR */}
-      <nav className="flex items-center justify-between px-8 py-4 border-b border-gray-100 sticky top-0 bg-white z-50">
-        <div className="text-2xl font-bold text-blue-600 tracking-tighter">
-          NEXGEN <span className="text-gray-900">AI</span>
+    <div className="flex h-screen bg-[#0a0a0c] text-gray-100 font-sans">
+      {/* Sidebar - Left Side */}
+      <aside className="w-64 bg-[#111114] border-r border-gray-800 flex flex-col">
+        <div className="p-6 text-2xl font-bold tracking-tighter text-blue-500">
+          NEXGEN <span className="text-white">AI</span>
         </div>
-        <div className="hidden md:flex space-x-8 font-medium text-gray-600">
-          <a href="#" className="hover:text-blue-600">Resume Checker</a>
-          <a href="#" className="hover:text-blue-600">Features</a>
-          <a href="#" className="hover:text-blue-600">FAQ</a>
-        </div>
-        <div className="flex items-center space-x-4">
-          <button className="text-gray-600 font-medium px-4 py-2">Log in</button>
-          <button className="bg-blue-600 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition">
-            Sign up free
-          </button>
-        </div>
-      </nav>
+        <nav className="flex-1 px-4 space-y-2 mt-4">
+          <NavItem icon={<LayoutDashboard size={20}/>} label="Dashboard" active />
+          <NavItem icon={<FileText size={20}/>} label="AI Resume Builder" />
+          <NavItem icon={<Search size={20}/>} label="Job Matcher" />
+          <NavItem icon={<Briefcase size={20}/>} label="Interview Prep" />
+          <NavItem icon={<Settings size={20}/>} label="Settings" />
+        </nav>
+      </aside>
 
-      {/* 2. HERO SECTION & UPLOADER */}
-      <main className="max-w-4xl mx-auto pt-16 pb-24 px-6 text-center">
-        <h1 className="text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
-          Get more interviews with an <span className="text-blue-600">AI-powered</span> resume
-        </h1>
-        <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
-          Upload your resume and the job description to see how well you match. 
-          Our AI gives you instant feedback to land your 20 LPA dream job.
-        </p>
-
-        <div className="bg-gray-50 p-8 rounded-3xl border-2 border-dashed border-gray-200 shadow-sm">
-          <textarea
-            className="w-full p-4 mb-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none h-40"
-            placeholder="Paste Job Description here..."
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-          />
-
-          <div className="flex flex-col items-center justify-center p-10 bg-white rounded-2xl border border-gray-200 shadow-sm mb-4">
-            <input
-              type="file"
-              className="mb-4 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
-            <p className="text-gray-400 text-sm">Upload PDF or DOCX</p>
-          </div>
-
-          <button
-            onClick={handleUpload}
-            disabled={loading}
-            className={`w-full py-4 rounded-xl text-lg font-bold text-white transition ${
-              loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 shadow-lg"
-            }`}
-          >
-            {loading ? "AI is Analyzing..." : "Analyze My Resume"}
-          </button>
-        </div>
-
-        {/* 3. RESULTS SECTION */}
-        {result && (
-          <div className="mt-12 p-8 bg-white rounded-3xl border border-gray-200 shadow-xl text-left animate-fade-in">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Analysis Results</h2>
-              <div className="text-4xl font-black text-blue-600 bg-blue-50 px-6 py-2 rounded-2xl">
-                {result.match_score}%
-              </div>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <h3 className="font-bold text-green-600 mb-2 flex items-center">
-                   ✅ Strengths
-                </h3>
-                <ul className="space-y-2">
-                  {result.strengths?.map((s: string, i: number) => (
-                    <li key={i} className="bg-green-50 p-3 rounded-lg text-gray-700 text-sm">{s}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-bold text-red-600 mb-2 flex items-center">
-                   ⚠️ Missing Skills
-                </h3>
-                <ul className="space-y-2">
-                  {result.missing_skills?.map((m: string, i: number) => (
-                    <li key={i} className="bg-red-50 p-3 rounded-lg text-gray-700 text-sm">{m}</li>
-                  ))}
-                </ul>
-              </div>
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Header */}
+        <header className="h-16 bg-[#111114] border-b border-gray-800 flex items-center justify-between px-8">
+          <div className="text-lg font-medium text-gray-400">Overview</div>
+          <div className="flex items-center space-x-4">
+            <Bell size={20} className="text-gray-400 cursor-pointer" />
+            <div className="flex items-center space-x-2 bg-[#1c1c21] px-3 py-1.5 rounded-full border border-gray-700">
+              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs">A</div>
+              <span className="text-sm font-medium">Anoop Raj</span>
             </div>
           </div>
-        )}
+        </header>
+
+        {/* Dashboard Content */}
+        <div className="p-8 overflow-y-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold">Welcome back, Anoop</h1>
+            <p className="text-gray-500 mt-1">Here's what's happening with your career progress.</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Section: Upload & Analysis */}
+            <div className="lg:col-span-2 space-y-8">
+              <div className="bg-[#111114] p-8 rounded-2xl border border-gray-800 shadow-xl">
+                <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                  <Upload size={20} className="text-blue-500" /> AI Smart Scan
+                </h2>
+                <div className="border-2 border-dashed border-gray-700 rounded-xl p-10 text-center hover:border-blue-500 transition-colors bg-[#16161a]">
+                  <input 
+                    type="file" 
+                    onChange={(e) => setFile(e.target.files?.[0] || null)}
+                    className="hidden" 
+                    id="resume-upload" 
+                  />
+                  <label htmlFor="resume-upload" className="cursor-pointer">
+                    <div className="bg-blue-600/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="text-blue-500" size={32} />
+                    </div>
+                    <p className="text-lg font-medium">{file ? file.name : "Click to upload resume"}</p>
+                    <p className="text-gray-500 text-sm mt-1">Supports PDF, DOCX up to 5MB</p>
+                  </label>
+                </div>
+                <button 
+                  onClick={handleUpload}
+                  disabled={loading}
+                  className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50"
+                >
+                  {loading ? "Analyzing Skills..." : "Run AI Analysis"}
+                </button>
+              </div>
+
+              {/* Sample Statistics Card */}
+              <div className="grid grid-cols-2 gap-4">
+                <StatCard title="Applications" value="12" icon={<Briefcase size={18}/>} color="text-blue-400" />
+                <StatCard title="Interviews" value="03" icon={<CheckCircle size={18}/>} color="text-green-400" />
+              </div>
+            </div>
+
+            {/* Right Section: Score Meter */}
+            <div className="space-y-8">
+              <div className="bg-[#111114] p-8 rounded-2xl border border-gray-800 flex flex-col items-center text-center">
+                <h3 className="text-lg font-semibold mb-8">ATS Readiness Score</h3>
+                <div className="relative w-40 h-40 flex items-center justify-center mb-6">
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle cx="80" cy="80" r="70" stroke="#1c1c21" strokeWidth="12" fill="transparent" />
+                    <circle 
+                      cx="80" cy="80" r="70" stroke="#2563eb" strokeWidth="12" fill="transparent"
+                      strokeDasharray={440}
+                      strokeDashoffset={440 - (440 * (score || 0)) / 100}
+                      strokeLinecap="round"
+                      className="transition-all duration-1000 ease-out"
+                    />
+                  </svg>
+                  <span className="absolute text-4xl font-bold">{score || 0}%</span>
+                </div>
+                <p className="text-sm text-gray-400 mb-6">Your resume is {score && score > 70 ? 'looking great!' : 'needs improvement.'}</p>
+                <div className="w-full space-y-3">
+                   <div className="flex items-center justify-between p-3 bg-[#16161a] rounded-lg">
+                      <div className="flex items-center gap-2 text-sm text-red-400"><AlertCircle size={14}/> Grammar</div>
+                      <span className="text-xs font-bold">Fix</span>
+                   </div>
+                   <div className="flex items-center justify-between p-3 bg-[#16161a] rounded-lg">
+                      <div className="flex items-center gap-2 text-sm text-green-400"><CheckCircle size={14}/> Keywords</div>
+                      <span className="text-xs font-bold">Good</span>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
+    </div>
+  );
+}
 
-      {/* 4. FAQ / MOTIVES SECTION */}
-      <footer className="bg-gray-900 text-white py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-12">Frequently Asked Questions</h2>
-          <div className="grid md:grid-cols-2 gap-8 text-left">
-            <div className="bg-gray-800 p-6 rounded-2xl">
-              <h4 className="font-bold mb-2">How accurate is the AI?</h4>
-              <p className="text-gray-400 text-sm">We use advanced NLP models to compare your resume against industry standards and specific JD requirements.</p>
-            </div>
-            <div className="bg-gray-800 p-6 rounded-2xl">
-              <h4 className="font-bold mb-2">Is my data safe?</h4>
-              <p className="text-gray-400 text-sm">We do not store your resumes. Your files are processed in real-time and deleted immediately after analysis.</p>
-            </div>
-          </div>
-        </div>
-      </footer>
+function NavItem({ icon, label, active = false }: { icon: any, label: string, active?: boolean }) {
+  return (
+    <div className={flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer transition-all ${active ? 'bg-blue-600/10 text-blue-500 border border-blue-500/20' : 'text-gray-400 hover:bg-gray-800'}}>
+      {icon}
+      <span className="font-medium">{label}</span>
+    </div>
+  );
+}
+
+function StatCard({ title, value, icon, color }: { title: string, value: string, icon: any, color: string }) {
+  return (
+    <div className="bg-[#111114] p-6 rounded-2xl border border-gray-800">
+      <div className={mb-4 ${color}}>{icon}</div>
+      <div className="text-2xl font-bold">{value}</div>
+      <div className="text-gray-500 text-sm">{title}</div>
     </div>
   );
 }
