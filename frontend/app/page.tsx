@@ -18,8 +18,8 @@ export default function Dashboard() {
     formData.append("resume", file);
 
     try {
-      // Replace with your actual Render URL
-      const res = await axios.post("https://your-render-link.onrender.com/analyze", formData);
+      // പ്രധാനപ്പെട്ടത്: ഇവിടെ നിന്റെ Render ലിങ്ക് പേസ്റ്റ് ചെയ്യുക (ഉദാഹരണത്തിന്: https://nexgen-backend.onrender.com/analyze)
+      const res = await axios.post("https://nexgen-ai-resume-backend.onrender.com/analyze", formData);
       setScore(res.data.ats_score);
     } catch (err) {
       console.error(err);
@@ -31,8 +31,8 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen bg-[#0a0a0c] text-gray-100 font-sans">
-      {/* Sidebar - Left Side */}
-      <aside className="w-64 bg-[#111114] border-r border-gray-800 flex flex-col">
+      {/* Sidebar */}
+      <aside className="w-64 bg-[#111114] border-r border-gray-800 flex flex-col hidden md:flex">
         <div className="p-6 text-2xl font-bold tracking-tighter text-blue-500">
           NEXGEN <span className="text-white">AI</span>
         </div>
@@ -47,7 +47,6 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header */}
         <header className="h-16 bg-[#111114] border-b border-gray-800 flex items-center justify-between px-8">
           <div className="text-lg font-medium text-gray-400">Overview</div>
           <div className="flex items-center space-x-4">
@@ -59,15 +58,13 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Dashboard Content */}
         <div className="p-8 overflow-y-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold">Welcome back, Anoop</h1>
-            <p className="text-gray-500 mt-1">Here's what's happening with your career progress.</p>
+            <p className="text-gray-500 mt-1">Ready to upgrade your career journey?</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Section: Upload & Analysis */}
             <div className="lg:col-span-2 space-y-8">
               <div className="bg-[#111114] p-8 rounded-2xl border border-gray-800 shadow-xl">
                 <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
@@ -85,26 +82,23 @@ export default function Dashboard() {
                       <FileText className="text-blue-500" size={32} />
                     </div>
                     <p className="text-lg font-medium">{file ? file.name : "Click to upload resume"}</p>
-                    <p className="text-gray-500 text-sm mt-1">Supports PDF, DOCX up to 5MB</p>
                   </label>
                 </div>
                 <button 
                   onClick={handleUpload}
                   disabled={loading}
-                  className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50"
+                  className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50"
                 >
-                  {loading ? "Analyzing Skills..." : "Run AI Analysis"}
+                  {loading ? "Analyzing..." : "Run AI Analysis"}
                 </button>
               </div>
 
-              {/* Sample Statistics Card */}
               <div className="grid grid-cols-2 gap-4">
                 <StatCard title="Applications" value="12" icon={<Briefcase size={18}/>} color="text-blue-400" />
                 <StatCard title="Interviews" value="03" icon={<CheckCircle size={18}/>} color="text-green-400" />
               </div>
             </div>
 
-            {/* Right Section: Score Meter */}
             <div className="space-y-8">
               <div className="bg-[#111114] p-8 rounded-2xl border border-gray-800 flex flex-col items-center text-center">
                 <h3 className="text-lg font-semibold mb-8">ATS Readiness Score</h3>
@@ -121,15 +115,15 @@ export default function Dashboard() {
                   </svg>
                   <span className="absolute text-4xl font-bold">{score || 0}%</span>
                 </div>
-                <p className="text-sm text-gray-400 mb-6">Your resume is {score && score > 70 ? 'looking great!' : 'needs improvement.'}</p>
-                <div className="w-full space-y-3">
-                   <div className="flex items-center justify-between p-3 bg-[#16161a] rounded-lg">
-                      <div className="flex items-center gap-2 text-sm text-red-400"><AlertCircle size={14}/> Grammar</div>
-                      <span className="text-xs font-bold">Fix</span>
+                <p className="text-sm text-gray-400 mb-6">Resume Health: {score && score > 70 ? 'Excellent' : 'Needs Review'}</p>
+                <div className="w-full space-y-3 text-left">
+                   <div className="flex items-center justify-between p-3 bg-[#16161a] rounded-lg border border-gray-800">
+                      <div className="flex items-center gap-2 text-sm text-red-400"><AlertCircle size={14}/> Formatting</div>
+                      <span className="text-xs font-bold text-gray-500">Fixed</span>
                    </div>
-                   <div className="flex items-center justify-between p-3 bg-[#16161a] rounded-lg">
-                      <div className="flex items-center gap-2 text-sm text-green-400"><CheckCircle size={14}/> Keywords</div>
-                      <span className="text-xs font-bold">Good</span>
+                   <div className="flex items-center justify-between p-3 bg-[#16161a] rounded-lg border border-gray-800">
+                      <div className="flex items-center gap-2 text-sm text-green-400"><CheckCircle size={14}/> Industry Keywords</div>
+                      <span className="text-xs font-bold text-gray-500">Good</span>
                    </div>
                 </div>
               </div>
