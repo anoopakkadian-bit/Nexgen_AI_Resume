@@ -147,9 +147,9 @@ function NavItem({ icon, label, active = false }: { icon: any, label: string, ac
 function StatCard({ title, value, icon, color }: { title: string, value: string, icon: any, color: string }) {
   return (
     <div className="bg-[#111114] p-6 rounded-2xl border border-gray-800">
-      <div className={mb-4 ${color}}>{icon}</div>
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="text-gray-500 text-sm">{title}</div>
-    </div>
-  );
+      <div className={mb-4 ${color}}>
+  <div className="text-2xl font-bold">{value}</div>
+  <div className="text-gray-500 text-sm">{title}</div>
+</div>
+ );
 }   
