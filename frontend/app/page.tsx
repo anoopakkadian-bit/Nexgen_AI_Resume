@@ -15,7 +15,9 @@ import {
   Map,
   Compass,
   CheckSquare,
-  Users
+  Users,
+  Loader2,
+  FileCheck
 } from 'lucide-react';
 
 type NavItemProps = {
@@ -54,14 +56,35 @@ function StatCard({ title, value, icon, color }: StatCardProps) {
       <div className="{w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${color}}">
         {icon}
       </div>
-      <h2 className="text-2xl font-bold text-white">{value}</h2>
-      <p className="text-xs text-gray-400 mt-1">{title}</p>
+      <h2 className="text-3xl font-bold text-white">{value}</h2>
+      <p className="text-sm text-gray-400 mt-1">{title}</p>
     </div>
   );
 }
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState('Dashboard');
+  
+  // File Upload States
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+
+  // File Change Handler
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setIsUploading(true);
+      setUploadSuccess(false);
+
+      // Simulating an AI Upload process for 2 seconds
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadSuccess(true);
+      }, 2000);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#09090b] text-white flex">
@@ -79,7 +102,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Nav Links representing the Career OS Core Modules */}
+          {/* Nav Links */}
           <nav className="space-y-1.5">
             <NavItem
               icon={<LayoutDashboard size={18} />}
@@ -202,9 +225,8 @@ export default function Page() {
               />
             </section>
 
-            {/* Quick Hub grid showcasing OS capabilities */}
+            {/* Quick Hub grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-              {/* Left & Center: Premium Hub Cards */}
               <div className="lg:col-span-2 space-y-6">
                 {/* AI Interactive Assistant Console */}
                 <div className="rounded-3xl border border-white/10 bg-[#111216] p-6">
@@ -274,19 +296,41 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Document upload block */}
+            {/* Interactive Document upload block */}
             <section className="rounded-[32px] border border-dashed border-white/10 bg-gradient-to-br from-[#12141a] to-[#0d0f13] p-10 md:p-16 text-center hover:border-blue-500/40 transition-all duration-300">
               <div className="w-16 h-16 rounded-3xl bg-blue-500/10 flex items-center justify-center mx-auto mb-5 text-blue-500">
-                <Upload size={28} />
+                {isUploading ? (
+                  <Loader2 size={28} className="animate-spin text-blue-500" />
+                ) : uploadSuccess ? (
+                  <FileCheck size={28} className="text-emerald-500" />
+                ) : (
+                  <Upload size={28} />
+                )}
               </div>
-              <h2 className="text-2xl font-bold mb-2">Upload Your Profile Documents</h2>
+              
+              <h2 className="text-2xl font-bold mb-2">
+                {isUploading ? "AI is parsing..." : uploadSuccess ? "Resume Loaded Successfully!" : "Upload Your Resume"}
+              </h2>
+              
               <p className="text-gray-400 mb-8 max-w-md mx-auto text-sm">
-                Upload your latest resume. Our AI Engine parses and distributes data to Job Tracker, Interview prep, and Portfolio sections.
+                {selectedFile ? (
+                  <span className="text-blue-400 font-semibold bg-blue-500/10 px-3 py-1.5 rounded-xl border border-blue-500/20">
+                    📄 {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
+                ) : (
+                  "Upload your latest resume. Our AI Engine parses and distributes data to Job Tracker, Interview prep, and Portfolio sections."
+                )}
               </p>
+              
               <label className="inline-flex">
-                <input type="file" className="hidden" />
+                <input 
+                  type="file" 
+                  accept=".pdf,.docx"
+                  onChange={handleFileChange}
+                  className="hidden" 
+                />
                 <span className="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 transition-all cursor-pointer font-medium shadow-lg shadow-blue-600/20 text-sm">
-                  Browse Files
+                  {isUploading ? "Uploading..." : uploadSuccess ? "Change File" : "Browse Files"}
                 </span>
               </label>
             </section>
